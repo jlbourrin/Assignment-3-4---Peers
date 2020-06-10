@@ -1,12 +1,12 @@
 library(reshape2)
-library(dplyr)
-
+library(plyr)
 
 
 # 1- Import data
 
 # Labels of activities and features
 activity_labels <- read.table("UCI HAR Dataset/activity_labels.txt")
+colnames(activity_labels) <- c("ID", "activity")
 features <- read.table("UCI HAR Dataset/features.txt")
 
 # import test data
@@ -31,9 +31,10 @@ colnames(subject_all) <- "subject"
 # 2-2 - Activities
 # Merge data on activities, and change the activity's code into its label
 y_all <- rbind(y_test, y_train)
-y_all <- merge(y_all, activity_labels, by.x = "V1", by.y = "V1", all = FALSE)
-y_all <- select(y_all,"V2") 
-colnames(y_all) <- "activity"
+colnames(y_all) <- "ID"
+y_all <- join(y_all, activity_labels, by = "ID", type = "left")
+y_all <- select(y_all,"activity") 
+
 
 # 2-3 - Measurements
 # 2-3-a Merge data on measurements and name all columns with features labels
@@ -46,7 +47,7 @@ x_all <- x_all[keep_those]
 # 2-4 Merge all columns from subjects, activites, and measurements to obtain complete datase
 # with descriptive activity and features names
 data <- cbind(subject_all, y_all, x_all)
-write.table(data, file = "Output/tidy_table.txt")
+write.table(data, file = "Output/tidy_table.txt", row.name = FALSE)
 
 
 #3 - Creates a second, independent tidy data set with the average of each variable for each 
@@ -56,5 +57,9 @@ write.table(data, file = "Output/tidy_table.txt")
 data$subject <- factor(data$subject)
 
 # 3-2 Melt and cast data to create the new tidy data set
-data %>% melt(id = c("subject", "activity")) %>% dcast(activity+subject ~ variable, mean) %>% 
-      write.table(file = "Output/tidy_table2.txt")
+data %>% melt(id = c("subject", "activity")) %>% dcast(subject+activity ~ variable, mean) %>% 
+      write.table(file = "Output/tidy_table2.txt", row.name = FALSE)
+
+
+
+
